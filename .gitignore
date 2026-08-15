@@ -1,0 +1,17 @@
+# JpgToPng build artifacts (including the local signing keystore — never commit)
+JpgToPng/app/build/
+
+# dependencies
+node_modules/
+
+# credentials and private data (defense in depth)
+*.keystore
+*.jks
+.credentials.yaml
+.env
+.secrets/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*~

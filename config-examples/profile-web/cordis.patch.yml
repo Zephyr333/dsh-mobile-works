@@ -1,0 +1,20 @@
+# Android 适配（M1.1 正式形态）：dsh-shell-termux 替代临时 patch v2。
+# 保护边界 = Termux app 域（SELinux u0_aXXX）+ approval 审批流；
+# sandboxMode 显式声明 workspace-write（permission-presets 挂载前提），enforcement 诚实上报 partial。
+- id: bash-sandbox
+  disabled: true
+- insert:
+    - id: shell-termux
+      name: '@dsh-android/dsh-shell-termux'
+      config:
+        bashPath: /data/user/0/com.dshmobile.shell/files/usr/bin/bash
+        prefix: /data/user/0/com.dshmobile.shell/files/usr
+        home: /data/user/0/com.dshmobile.shell/files/home
+        cwd: /data/user/0/com.dshmobile.shell/files/home
+        timeoutMs: 120000
+        maxTimeoutMs: 600000
+- id: ui-layout
+  disabled: true
+- insert:
+    - id: ui-responsive
+      name: '@dsh-android/dsh-client-ui-responsive'

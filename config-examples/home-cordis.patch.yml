@@ -1,0 +1,6 @@
+# User-level machine patch, applied to every DSH profile.
+# Enable the official user-global instruction file ~/.dsh/AGENTS.md.
+- id: agent-instructions
+  disabled: false
+  config:
+    maxBytes: 65536
