@@ -1,6 +1,3 @@
-# JpgToPng build artifacts (including the local signing keystore — never commit)
-JpgToPng/app/build/
-
 # dependencies
 node_modules/
 

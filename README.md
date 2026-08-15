@@ -1,43 +1,58 @@
 # dsh-mobile-works
 
-在 DSH Mobile（Android / Termux 风格 runtime）上长期开发、配置、修复与沉淀的成果集。
-本仓库把这些内容整理为可复用、可重建的公开形态；不包含运行时镜像、缓存、备份、
-凭据或私人数据。
+DSH Mobile 开发连续性 / 迁移 / 重建的长期资产库。
 
-## 内容一览
+本仓库保存这台 Android 设备上 DSH Mobile 环境的长期维护资产，用于：
 
-| 目录 | 内容 | 说明 |
+- runtime 更新、换机、重装后的环境与能力恢复；
+- 继续开发 DSH Mobile 插件 / preset / 脚本 / 项目时的复用起点。
+
+不保存：运行时本体、缓存、node_modules、备份镜像、实验项目与历史研究记录、
+私人数据与凭据、无法确认再分发条件的第三方内容。
+
+## 内容
+
+| 目录 | 内容 | 用途 |
 | --- | --- | --- |
-| `JpgToPng/` | 完整 Android APK 项目：JPG→PNG 转换小工具 | 项目内 Android stub + `aapt + javac + d8 + zipalign + apksigner` 无 SDK 构建链，`build.sh` 已实测可重建 APK |
-| `liangshen/` | 「梁神模式」agent preset 的应用与研究 | 安装后的 preset 快照（含 NOTICE/LICENSE）与两阶段锚定机制验证记录 |
-| `tools/` | DSH Mobile 环境维护工具 | 恢复脚本、备份脚本、开发工具清单（Termux 路径修复、Android/Java 工具链、Python 3.14 部署等） |
-| `config-examples/` | DSH 用户配置示例 | home 级 cordis patch、web profile 插件依赖与 Android 适配 patch、settings.yaml |
-| `docs/` | 环境约定文档 | files/usr、files/home、共享存储三层结构与备份/恢复说明 |
+| `tools/` | dsh-env-restore.sh、dsh-env-backup.sh、home-backup.sh、DEV-TOOLS.md | 环境恢复与备份脚本、已修问题清单、无 SDK APK 构建链 |
+| `config-examples/` | 实际 DSH 配置副本（home 级 patch、web profile、settings） | 迁移 / 重建时的配置基线 |
+| `docs/` | 环境分层约定（dsh-environment.md）与共享存储说明（shared-storage.md） | 理解文件布局、恢复入口与备份策略 |
 
-## 快速入口
+## 恢复入口
 
-- 重建 JpgToPng APK：`sh JpgToPng/build.sh`（详见 `JpgToPng/README.md`）
-- 手机环境恢复：`sh tools/dsh-env-restore.sh`（在手机环境内使用；见 `tools/DEV-TOOLS.md`）
-- 梁神模式验证记录：`liangshen/VERIFICATION.md`
+- 换机 / 重装 / runtime 更新后：`sh tools/dsh-env-restore.sh`
+- 日常备份：`tools/home-backup.sh`（workspace）、`tools/dsh-env-backup.sh`（DSH 用户内容）
+- 能力与修复知识：`tools/DEV-TOOLS.md`（工具链、Python 部署、ripgrep 修复、无 SDK APK 构建链、已修问题）
 
-## 许可与归属
+## 已验证的开发能力
 
-- 本仓库内的原创内容（JpgToPng 源码与构建脚本、`tools/` 脚本、`config-examples/`、
-  `docs/`、`liangshen/` 验证记录）暂未附开源许可证，保留所有权利；引用请注明出处。
-- `liangshen/preset/` 是第三方包 `@linxin666/dsh-liangshen@0.1.16` 的安装后快照
-  （Apache-2.0）；其中 `agent.cordis.yml` 改编自 DeepSeek Harness 内置 Minimal/Standard
-  preset（MIT），`tool-bootstrap.mjs` 基于
-  [xiaobright/dsh-anchored-standard](https://github.com/xiaobright/dsh-anchored-standard)（MIT）。
-  NOTICE 与 LICENSE 已随快照保留，详见 `liangshen/README.md`。
+- Node：node / npm / corepack / pnpm
+- Android/Java：java / javac / aapt / d8 / r8 / zipalign / apksigner
+  （无 Android SDK 的 APK 构建链见 `tools/DEV-TOOLS.md`）
+- Python：python3 / pip3（Termux deb 手动部署，恢复方法见 `tools/DEV-TOOLS.md`）
+- Git / make / curl / bash；DSH 文件搜索 tools.grep / tools.glob 已修复可用
+- 不可用：clang / gcc / cmake（无需为 APK 构建补齐）
 
-## 有意排除的内容
+## 环境分层
 
-- 运行时、缓存、node_modules、构建产物、APK 与签名 keystore
-- 备份镜像与大型二进制工具链（android-toolchain.tar、python debs、ripgrep 二进制）
-- 凭据、API key、私人会话记录与个人设备信息
-- 无法确认再分发条件的第三方源码（如 DSH Web UI 源码副本）
+三层结构（详见 `docs/`）：
 
-## 维护方式
+- `files/usr`（$PREFIX）：APK / runtime 可替换层，不放置个人长期内容；
+- `files/home`（~）：个人长期环境，主开发区 `~/workspace`；
+- `/storage/emulated/0/DSH`：备份 / 导出 / 归档与最终产物（不支持 symlink）。
 
-本仓库是手机环境的公开投影：日常开发仍在本机原始位置进行，整理公开版本时再把
-公开副本同步到本仓库；不在本仓库中改动正在使用的原始文件。
+## 不在 GitHub 的私有恢复资产
+
+以下资产位于本机共享存储，不宜进入公开仓库，迁移时需自行携带：
+
+- `/storage/emulated/0/DSH/tools/android-toolchain.tar` —— Android/Java 工具链备份
+  （JDK、aapt、d8.jar、apksigner.jar），restore 脚本按缺失项从中解回；
+- `/storage/emulated/0/DSH/tools/python-debs/` —— Python 3.14 的 Termux deb 存档，
+  restore 脚本用它重建 python3；
+- `/storage/emulated/0/DSH/tools/rg-15.2.0-arm64` —— ripgrep 二进制源文件，
+  restore 脚本用它重建 grep/glob 平台包；
+- `/storage/emulated/0/DSH/backups/` —— 私有备份镜像，不进入本仓库。
+
+## 许可
+
+本仓库内容为本机自研与维护，暂未附开源许可证，保留所有权利；引用请注明出处。
