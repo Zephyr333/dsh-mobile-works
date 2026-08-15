@@ -23,6 +23,8 @@ echo "SRC: $HOME_DIR/workspace"
 echo "DST: $DST"
 
 mkdir -p "$DST_DIR"
+# Keep the media scanner out of the backups tree (see dsh-env-backup.sh).
+touch "$LONG/backups/.nomedia"
 "$TAR" -C "$HOME_DIR" -cf - \
   --exclude='node_modules' \
   workspace | "$GZIP" -c > "$DST"

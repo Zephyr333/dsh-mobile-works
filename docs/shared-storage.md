@@ -19,7 +19,7 @@
 │   ├── dsh-profile/          # 用户 DSH 内容备份：settings、profiles、skills、presets、agents skills
 │   └── home/                 # ~/workspace 的时间戳 tar.gz 备份
 ├── export/
-│   └── JpgToPng/             # JpgToPng 项目快照和已构建 APK 的导出副本
+│   └── <项目>/               # 项目快照和最终产物的导出副本
 ├── tools/
 │   ├── android-toolchain.tar # Android/Java 工具链备份（按缺失项恢复，不整体覆盖 runtime）
 │   ├── dsh-env-backup.sh     # 同步 DSH profile/skills 到 backups/dsh-profile
@@ -32,7 +32,6 @@
 ## 个人长期内容的位置（files/home）
 
 - 项目和小实验：`~/workspace/<项目名>`
-  （现有 `~/workspace/JpgToPng` 是真实目录，不再依赖共享存储）
 - DSH 插件 / UI / 主题包源码：`~/workspace/dsh/packages/`
 - 壁纸等素材：`~/workspace/dsh/wallpapers/`
 - 个人脚本和小工具：`~/workspace/scripts/`
@@ -45,8 +44,8 @@
   - 项目级 skill：`<项目>/.dsh/skills/` 或 `<项目>/.agents/skills/`
   - 项目级指令：`<项目>/AGENTS.md`、`AGENTS.local.md` 等，随项目目录一起备份
 
-共享存储里的 `export/JpgToPng` 只是导出/快照；日常开发改
-`~/workspace/JpgToPng`。需要更新共享快照时手动同步即可。
+共享存储里的 `export/` 只放项目快照与最终产物；日常开发在
+`~/workspace`，需要时手动同步快照。
 
 ## 开发工具如何保留
 

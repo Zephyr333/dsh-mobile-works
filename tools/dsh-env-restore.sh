@@ -7,12 +7,11 @@
 # newer runtime with the whole archived toolchain.
 #
 # User layer: restores home workspace from the newest shared backup when the
-# whole workspace is absent, restores JpgToPng from the shared export when
-# missing, and copies missing DSH user content back from the shared backup:
-# settings, home patch, user-global AGENTS.md, skills, agent presets,
-# ~/.agents/skills, home-level tool configs (.gitconfig/.curlrc/.wgetrc/
-# .npmrc), and every backed-up profile's user-owned files plus @dsh-android
-# packages.
+# whole workspace is absent, and copies missing DSH user content back from
+# the shared backup: settings, home patch, user-global AGENTS.md, skills,
+# agent presets, ~/.agents/skills, home-level tool configs
+# (.gitconfig/.curlrc/.wgetrc/.npmrc), and every backed-up profile's
+# user-owned files plus @dsh-android packages.
 PREFIX="${TERMUX__PREFIX:-/data/user/0/com.dshmobile.shell/files/usr}"
 HOME_DIR="${HOME:-/data/user/0/com.dshmobile.shell/files/home}"
 LONG="/storage/emulated/0/DSH"
@@ -187,17 +186,8 @@ if [ ! -d "$HOME_DIR/workspace" ] && [ -n "$LATEST_HOME_TAR" ]; then
   "$GZIP" -dc "$LATEST_HOME_TAR" | "$TAR" -xf - -C "$HOME_DIR"
 fi
 
-# 6. Ensure JpgToPng project exists as a real directory in home (not a symlink).
+# 6. Ensure the workspace directory exists.
 mkdir -p "$HOME_DIR/workspace"
-if [ -d "$LONG/export/JpgToPng" ]; then
-  if [ -L "$HOME_DIR/workspace/JpgToPng" ]; then
-    rm -f "$HOME_DIR/workspace/JpgToPng"
-  fi
-  if [ ! -e "$HOME_DIR/workspace/JpgToPng" ]; then
-    echo "-- restoring JpgToPng project from shared export snapshot"
-    (cd "$LONG/export" && "$TAR" -cf - JpgToPng) | (cd "$HOME_DIR/workspace" && "$TAR" -xf -)
-  fi
-fi
 
 # 7. Restore missing DSH user long-term content from the shared backup.
 BASE="$LONG/backups/dsh-profile"
@@ -302,10 +292,10 @@ if command -v python3 >/dev/null 2>&1; then
     echo "CHECK: python3 stdlib import failed"
   fi
 fi
-if [ -d "$HOME_DIR/workspace/JpgToPng" ] && [ ! -L "$HOME_DIR/workspace/JpgToPng" ]; then
-  echo "OK: workspace/JpgToPng (real directory in files/home)"
+if [ -d "$HOME_DIR/workspace" ]; then
+  echo "OK: workspace (real directory in files/home)"
 else
-  echo "CHECK: workspace/JpgToPng missing or not a real directory"
+  echo "CHECK: workspace missing"
 fi
 if [ -x "$PREFIX/lib/node_modules/@deepseek-ai/dsh/node_modules/@vscode/ripgrep-android-arm64/bin/rg" ]; then
   echo "OK: rg platform package (grep/glob)"

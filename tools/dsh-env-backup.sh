@@ -20,6 +20,10 @@ echo "== DSH user content backup =="
 echo "SRC: $SRC"
 echo "DST: $DST"
 mkdir -p "$DST/profiles"
+# Keep Android's media scanner out of the backup tree: *.ts / *.d.ts files
+# under here (type declarations of the client UI packages) would otherwise be
+# misclassified as MPEG-TS videos and flood the gallery with 0-second clips.
+touch "$LONG/backups/.nomedia"
 
 backup_file() {
   _name="$1"

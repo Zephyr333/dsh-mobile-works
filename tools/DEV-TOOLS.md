@@ -24,8 +24,10 @@
 | aapt | v0.2-android-16.0.0_r4 | Android 资源打包 |
 | d8 / r8 | 9.2.4-dev | dex 编译 |
 | apksigner | 0.9 | APK 签名 |
+| zipalign | 无 `--version` 输出（实测可用） | APK zip 对齐（`-c` 校验已实测通过） |
 | make | 4.4.1 | 构建辅助 |
 | curl | 8.12.1 | 网络调试 |
+| wget | 1.25.0 | 网络下载 |
 | python3 | 3.14.6 | Python 解释器（Termux deb 手动部署，见下文） |
 | pip3 | 26.2.1 | Python 包安装（纯 Python wheel 已验证可用） |
 
@@ -45,8 +47,25 @@ Android 工具 jar：
 - `clang` / `clang++` / `gcc` / `g++`：bin 目录里只剩损坏的符号链接，没有编译器二进制。
 - `cmake`：bin 中没有可执行入口。
 
-这些不是当前 Android APK 构建的必要项；`JpgToPng` 项目使用的是
-`aapt + javac + d8 + apksigner`。需要时再单独安装，不要挪动现有文件。
+这些不是当前 APK 构建的必要项；无 SDK 的 APK 构建链见下文
+「无 Android SDK 的 APK 构建链」。需要时再单独安装，不要挪动现有文件。
+
+## 无 Android SDK 的 APK 构建链（已在本机实测）
+
+无 Android SDK / NDK / Gradle 的环境可用以下链完整构建并签名 APK：
+
+1. 项目内写最小 `android.*` stub（只含本项目用到的签名），`javac` 编译后
+   `jar cf android-stub.jar -C classes_stub .` 打包；
+2. `javac -source 1.8 -target 1.8 -cp android-stub.jar -d classes_app <源码>`；
+3. `java -cp $PREFIX/share/java/d8.jar com.android.tools.r8.D8 --release --min-api 24 --output dex classes_app/**/*.class`
+   （`--output` 目录必须先存在，否则报 `Invalid output`）；
+4. `aapt package -f -M AndroidManifest.xml -S res -I /system/framework/framework-res.apk -F unsigned.apk`
+   —— 用设备 framework-res.apk 提供 `@android:` 资源解析，因此需在真机环境执行；
+5. `jar uf unsigned.apk -C dex classes.dex`；
+6. `zipalign -f 4 unsigned.apk aligned.apk`；
+7. `keytool -genkeypair` 生成本地 keystore，`apksigner sign` 签名，`apksigner verify` 验证。
+
+keystore、密码与全部构建产物不要进入 Git。
 
 ## Python 3.14 部署说明（2026-08-16）
 
@@ -86,8 +105,8 @@ C 编译器配套。升级/卸载 python 走手工流程，不走 apt/pkg 生命
 - 这些修复都写进了 `dsh-env-restore.sh`，runtime 更新后重新执行一次即可。
 - grep/glob 工具：`@vscode/ripgrep` 没有 android 平台包，已在
   `$PREFIX/lib/node_modules/@deepseek-ai/dsh/node_modules/@vscode/`
-  下放置 `ripgrep-android-arm64` 包（Termux 官方 rg 15.2.0 二进制，
-  源文件 `tools/rg-15.2.0-arm64`）；dsh web 重启后生效。
+  下放置 `ripgrep-android-arm64` 平台包（Termux 官方 rg 15.2.0 二进制，
+  源文件 `tools/rg-15.2.0-arm64`）；当前 tools.grep / tools.glob 已实测可用。
 - git HTTPS：`~/.gitconfig` 的 `http.sslCAInfo` 指向
   `$PREFIX/etc/tls/cert.pem`，`init.templateDir` 指向
   `$PREFIX/share/git-core/templates`；remote helper 由
@@ -97,8 +116,10 @@ C 编译器配套。升级/卸载 python 走手工流程，不走 apt/pkg 生命
 - npm 全局前缀：`~/.npmrc` 设置 `prefix=$PREFIX`，`npm i -g` 安装到
   runtime 层（runtime 更新后需重装全局包）。
 - 工具 shell 以 `bash --noprofile --norc -i` 启动：`~/.bashrc`/
-  `~/.profile` 不会被读取，环境级修复一律走工具自身的配置文件或
-  `$PREFIX/bin` 下的 shim。
+  `~/.profile` 不会被读取，不能依赖这些 rc 文件让兼容配置自动生效。
+  当前已落地的兼容修复主要使用工具自身配置文件或 runtime 可见的适配
+  方式（如 `$PREFIX/bin` 下的 shim）；这不代表 DSH/terminal provider
+  永久唯一的环境注入机制。
 
 ## 恢复步骤
 
@@ -106,10 +127,10 @@ C 编译器配套。升级/卸载 python 走手工流程，不走 apt/pkg 生命
 
 脚本只做安全修复：
 1. 如果 Android/Java 工具链缺失，按缺失项从 `android-toolchain.tar` 解回；
-2. 修复 `$PREFIX/bin`、`$PREFIX/libexec`、npm/corepack 启动器里的旧 Termux 路径；
-3. 重建 pnpm/pnpx shim；
-4. 如果 `~/workspace` 整体缺失，从最新的 home 备份自动恢复；
-5. 如果 `~/workspace/JpgToPng` 缺失，从共享 `export/JpgToPng` 快照恢复为真实目录；
+2. 如果 `$PREFIX/bin/python3.14` 缺失，从 `tools/python-debs` 存档解包并只补缺失文件（跳过 share/man、share/doc、share/info、lib/cmake 与 liblzma.so.5.8.3），随后重建缺失的 `sitecustomize.py`（SSL CA bundle 适配）；
+3. 修复 `$PREFIX/bin`、`$PREFIX/libexec`、npm/corepack 启动器里的旧 Termux 路径；
+4. 重建 pnpm/pnpx shim；
+5. 如果 `~/workspace` 整体缺失，从最新的 home 备份自动恢复；
 6. 从 `backups/dsh-profile` 补回缺失的用户长期内容：settings、home patch、
    `AGENTS.md`、skills、`.agent-presets`、`~/.agents/skills`、每个 profile
    的用户文件和 `@dsh-android` 适配包；
